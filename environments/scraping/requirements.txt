@@ -1,0 +1,50 @@
+# Web scraping libraries
+selenium
+beautifulsoup4
+requests
+threading
+
+# HTML parsing
+lxml
+
+# HTTP client
+httpx
+
+# Asynchronous programming
+aiohttp
+
+# Data handling and analysis
+pandas
+numpy
+
+# JSON handling
+jsonlines
+
+# Date and time handling
+python-dateutil
+
+# User agent strings
+fake-useragent
+
+# CAPTCHA solving (if needed)
+# 2captcha-python==1.2.0
+
+# Proxy rotation (if needed)
+# rotating-free-proxies
+
+# Rate limiting and retrying
+ratelimit
+tenacity
+
+# Parsing command-line arguments
+argparse
+
+# Environment variables
+python-dotenv
+
+# Testing
+pytest
+
+# Linting
+flake8
+

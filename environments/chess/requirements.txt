@@ -1,0 +1,24 @@
+# Chess engine and utilities
+python-chess
+stockfish
+
+# LLM APIs
+openai
+anthropic
+google-generativeai
+groq
+llama-cpp-python
+xai-sdk
+
+# GUI and visualization
+pygame
+pygame-gui
+
+# HTTP requests
+requests
+
+# Async support
+aiohttp
+
+# Linting
+flake8

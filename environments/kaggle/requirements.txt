@@ -1,0 +1,95 @@
+# Data manipulation and analysis
+numpy
+pandas
+scipy
+
+# Machine Learning
+scikit-learn
+xgboost
+lightgbm
+catboost
+
+# Deep Learning
+tensorflow
+torch
+torchvision
+keras
+
+# Natural Language Processing
+nltk
+gensim
+spacy
+
+# Visualization
+matplotlib
+seaborn
+plotly
+
+# Image processing
+Pillow
+opencv-python
+
+# Feature engineering
+featuretools
+
+# Hyperparameter tuning
+optuna
+
+# Progress bars
+tqdm
+
+# Jupyter extensions
+jupyter-contrib-nbextensions
+
+# API interaction
+kaggle
+
+# Efficient data storage
+h5py
+
+# Time series analysis
+statsmodels
+prophet
+
+# Geospatial analysis
+geopandas
+
+# Grid and random search
+scikit-optimize
+
+# Reinforcement Learning
+gym
+
+# Gradient Boosting
+xgboost
+lightgbm
+catboost
+
+# Explanation methods
+shap
+lime.1
+
+# Survival analysis
+lifelines
+
+# Dimensionality reduction
+umap-learn
+
+# Model interpretation
+eli5
+
+# Fuzzy string matching
+fuzzywuzzy
+
+# Web scraping
+beautifulsoup4
+selenium
+
+# Data validation
+great-expectations
+
+# Extra utilities
+joblib
+
+# llm automation
+openai 
