@@ -1,9 +1,9 @@
-ARG BASE_IMAGE=jupyter/minimal-notebook:latest
+ARG BASE_IMAGE=base_jupyter:latest
 FROM ${BASE_IMAGE}
 
 USER root
 
-# Install system dependencies
+# Install system dependencies for SD
 RUN apt-get update && apt-get install -y \
     git \
     python3-venv \
@@ -28,18 +28,13 @@ ENV PATH="/home/jovyan/work/ComfyUI/venv/bin:$PATH"
 # Install PyTorch with CUDA support
 RUN pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
 
-# Install ComfyUI requirements
-COPY requirements.txt ./
+# Install requirements
+COPY environments/sd/requirements.txt ./
 RUN pip install -r requirements.txt
 
 # Clone ComfyUI-Manager
 RUN mkdir -p custom_nodes && \
     git clone https://github.com/ltdrdata/ComfyUI-Manager.git custom_nodes/ComfyUI-Manager
-
-# Ensure the correct permissions
-USER root
-RUN chown -R ${NB_UID} /home/jovyan/work
-USER ${NB_UID}
 
 # Set the entry point to run main.py
 CMD ["python", "main.py"]
