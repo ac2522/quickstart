@@ -1,0 +1,59 @@
+FROM pytorch/pytorch:latest
+
+# Set working directory
+WORKDIR /home/jovyan/work
+
+# Install essential system packages
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    build-essential \
+    libgl1 \
+    sudo \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user with same UID/GID as typical jupyter images
+# This makes the image more compatible with the jupyter ecosystem
+ENV NB_USER=jovyan \
+    NB_UID=1000 \
+    NB_GID=100
+
+# Create the user and set up sudo
+RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER && \
+    echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$NB_USER && \
+    chmod 0440 /etc/sudoers.d/$NB_USER
+
+# Create necessary directories for Jupyter settings
+RUN mkdir -p /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/apputils-extension/ \
+    && mkdir -p /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/ \
+    && mkdir -p /home/jovyan/data
+
+# Copy settings files
+COPY files/themes.jupyterlab-settings /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/apputils-extension/
+COPY files/tracker.jupyterlab-settings /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/
+
+# Set up correct permissions
+RUN chown -R $NB_USER:$NB_GID /home/jovyan/.jupyter /home/jovyan/data /home/jovyan/work
+RUN chmod -R 755 /home/jovyan/.jupyter
+
+# Switch to non-root user
+USER $NB_USER
+
+# Install Jupyter and other common Python packages
+RUN pip install --no-cache-dir \
+    jupyter \
+    notebook \
+    jupyterlab \
+    numpy \
+    pandas \
+    matplotlib \
+    ipykernel \
+    jupyter-contrib-nbextensions \
+    && pip install --upgrade nbconvert
+
+EXPOSE 8888
+
+# Set up entrypoint and default command
+CMD ["jupyter", "notebook", "--ip='0.0.0.0'", "--port=8888", "--no-browser", "--allow-root"]
