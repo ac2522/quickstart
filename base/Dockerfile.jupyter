@@ -1,24 +1,46 @@
 FROM jupyter/minimal-notebook:latest
 
-WORKDIR /usr/src/app
+# Set working directory
+WORKDIR /home/jovyan/work
 
 USER root
-RUN apt-get update && apt-get install -y libgl1 && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install common system dependencies
+RUN apt-get update && apt-get install -y \
+    libgl1 \
+    build-essential \
+    curl \
+    wget \
+    git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create necessary directories for Jupyter settings
+RUN mkdir -p /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/apputils-extension/ \
+    && mkdir -p /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/
 
 # Copy settings files
 COPY files/themes.jupyterlab-settings /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/apputils-extension/
 COPY files/tracker.jupyterlab-settings /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/
 
-# Change ownership of the copied files to jovyan
-RUN chown -R $NB_UID /home/jovyan/.jupyter
-RUN chmod -R 777 /home/jovyan/.jupyter
+# Set up correct permissions
+RUN chown -R $NB_UID:$NB_GID /home/jovyan/.jupyter
+RUN chmod -R 755 /home/jovyan/.jupyter
 
 # Switch back to the Jupyter user
 USER $NB_UID
 
-# Install Python dependencies
-RUN pip install jupyter-contrib-nbextensions
-RUN pip install --upgrade nbconvert
+# Install common Python dependencies
+RUN pip install --no-cache-dir \
+    numpy \
+    pandas \
+    matplotlib \
+    ipykernel \
+    jupyter-contrib-nbextensions \
+    && pip install --upgrade nbconvert
+
+# Create data directory
+RUN mkdir -p /home/jovyan/data
 
 EXPOSE 8888
 
