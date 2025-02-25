@@ -1,43 +1,95 @@
 #!/bin/bash
 
+set -e  # Exit immediately if a command exits with non-zero status
+
+# Print usage info
+function print_usage() {
+    echo "QuickStart Environment Builder"
+    echo "-----------------------------"
+    echo "Usage: $0 <base_name> <environment_name>"
+    echo ""
+    echo "Available bases:"
+    echo "  - jupyter (minimal Jupyter notebook)"
+    echo ""
+    echo "Available environments:"
+    echo "  - minimal:  Basic Python with numpy and OpenCV"
+    echo "  - kaggle:   Full data science stack with ML libraries"
+    echo "  - yolo:     Computer vision with YOLO object detection"
+    echo "  - chess:    Chess analysis environment"
+    echo "  - scraping: Web scraping tools"
+    echo "  - sd:       Stable Diffusion with ComfyUI"
+    echo ""
+    echo "Example: $0 jupyter minimal"
+}
+
 # Check if correct number of arguments is provided
 if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <base_name> <environment_name>"
-    echo "Available bases: jupyter, jupyter-pytorch, jupyter-tensorflow"
-    echo "Available environments: Check the 'environments' folder in the repository"
+    print_usage
     exit 1
 fi
 
 BASE_NAME=$1
 ENV_NAME=$2
-GITHUB_RAW_URL="https://raw.githubusercontent.com/ac2522/quickstart"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# Create temporary directory
-TEMP_DIR=$(mktemp -d)
-cd $TEMP_DIR
+echo "🚀 Building environment: $BASE_NAME-$ENV_NAME"
+echo "Repository root: $REPO_ROOT"
 
-# Download base Dockerfile
-mkdir -p base
-curl -o base/Dockerfile.$BASE_NAME $GITHUB_RAW_URL/base/Dockerfile.$BASE_NAME
+# Check if the environment exists
+if [ ! -d "$REPO_ROOT/environments/$ENV_NAME" ]; then
+    echo "❌ Error: Environment '$ENV_NAME' not found in environments directory"
+    echo "Available environments:"
+    ls -1 "$REPO_ROOT/environments"
+    exit 1
+fi
 
-# Download Jupyter settings files
-mkdir -p files
-curl -o files/themes.jupyterlab-settings $GITHUB_RAW_URL/files/themes.jupyterlab-settings
-curl -o files/tracker.jupyterlab-settings $GITHUB_RAW_URL/files/tracker.jupyterlab-settings
+# Check if the base exists
+if [ ! -f "$REPO_ROOT/base/Dockerfile.$BASE_NAME" ]; then
+    echo "❌ Error: Base '$BASE_NAME' not found"
+    echo "Available bases:"
+    ls -1 "$REPO_ROOT/base" | grep Dockerfile | sed 's/Dockerfile.//'
+    exit 1
+fi
+
+# Create build directory
+BUILD_DIR=$(mktemp -d)
+echo "📁 Creating temporary build directory: $BUILD_DIR"
+
+# Create necessary directory structure
+mkdir -p "$BUILD_DIR/base"
+mkdir -p "$BUILD_DIR/environments/$ENV_NAME"
+mkdir -p "$BUILD_DIR/files"
+
+# Copy base Dockerfile
+cp "$REPO_ROOT/base/Dockerfile.$BASE_NAME" "$BUILD_DIR/base/"
+
+# Copy settings files
+cp "$REPO_ROOT/files/"* "$BUILD_DIR/files/"
 
 # Build base image
-docker build -t $BASE_NAME:latest -f base/Dockerfile.$BASE_NAME .
+echo "🏗️ Building base image: $BASE_NAME:latest"
+docker build -t "$BASE_NAME:latest" -f "$BUILD_DIR/base/Dockerfile.$BASE_NAME" "$BUILD_DIR"
 
-# Download environment-specific Dockerfile and requirements
-mkdir -p environments/$ENV_NAME
-curl -o environments/$ENV_NAME/Dockerfile $GITHUB_RAW_URL/environments/$ENV_NAME/Dockerfile
-curl -o environments/$ENV_NAME/requirements.txt $GITHUB_RAW_URL/environments/$ENV_NAME/requirements.txt
+# Copy environment-specific files
+cp "$REPO_ROOT/environments/$ENV_NAME/Dockerfile" "$BUILD_DIR/environments/$ENV_NAME/"
+cp "$REPO_ROOT/environments/$ENV_NAME/requirements.txt" "$BUILD_DIR/environments/$ENV_NAME/"
+
+# Copy files directory to environment directory for Dockerfile access
+cp -r "$BUILD_DIR/files" "$BUILD_DIR/environments/$ENV_NAME/"
 
 # Build environment-specific image
-docker build -t $BASE_NAME-$ENV_NAME:latest --build-arg BASE_IMAGE=$BASE_NAME:latest -f environments/$ENV_NAME/Dockerfile environments/$ENV_NAME
+echo "🏗️ Building environment image: $BASE_NAME-$ENV_NAME:latest"
+docker build -t "$BASE_NAME-$ENV_NAME:latest" --build-arg BASE_IMAGE="$BASE_NAME:latest" -f "$BUILD_DIR/environments/$ENV_NAME/Dockerfile" "$BUILD_DIR/environments/$ENV_NAME"
 
 # Clean up
-cd -
-rm -rf $TEMP_DIR
+echo "🧹 Cleaning up temporary files"
+rm -rf "$BUILD_DIR"
 
-echo "Docker image $BASE_NAME-$ENV_NAME:latest has been built successfully!"
+echo "✅ Docker image $BASE_NAME-$ENV_NAME:latest has been built successfully!"
+echo ""
+echo "To run the environment:"
+echo "docker run -p 8888:8888 -v \$(pwd)/notebooks:/home/jovyan/work $BASE_NAME-$ENV_NAME:latest"
+echo ""
+echo "For GPU support (if available):"
+echo "docker run --gpus all -p 8888:8888 -v \$(pwd)/notebooks:/home/jovyan/work $BASE_NAME-$ENV_NAME:latest"
