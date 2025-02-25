@@ -1,9 +1,9 @@
-ARG BASE_IMAGE=jupyter/minimal-notebook:latest
+ARG BASE_IMAGE=pytorch_base:latest
 FROM ${BASE_IMAGE}
 
 USER root
 
-# Install system dependencies
+# Install system dependencies specific to ML/Kaggle
 RUN apt-get update && apt-get install -y \
     libssl-dev \
     libffi-dev \
@@ -16,8 +16,9 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Switch back to the default user
-USER ${NB_UID}
+USER $NB_USER
 
-# Install Python dependencies
-COPY requirements.txt /tmp/
+# Install Python dependencies for Kaggle competitions
+# This will skip reinstalling packages already in the base
+COPY environments/kaggle/requirements.txt /tmp/
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
