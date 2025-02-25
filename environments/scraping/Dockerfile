@@ -1,9 +1,9 @@
-ARG BASE_IMAGE=jupyter/minimal-notebook:latest
+ARG BASE_IMAGE=base_jupyter:latest
 FROM ${BASE_IMAGE}
 
 USER root
 
-# Install system dependencies
+# Install system dependencies for web scraping
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -29,19 +29,8 @@ RUN CHROME_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com
 # Switch back to the default user
 USER ${NB_UID}
 
-# Install Python dependencies
-COPY requirements.txt /tmp/
+# Install Python dependencies for scraping
+COPY environments/scraping/requirements.txt /tmp/
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-# Set up the working directory
-WORKDIR /home/jovyan/work
-
-# Copy your scraping application files
-COPY . /home/jovyan/work/
-
-# Ensure the correct permissions
-USER root
-RUN chown -R ${NB_UID} /home/jovyan/work
-USER ${NB_UID}
-
-# The CMD will be inherited from the base image
+# The CMD is inherited from the base image
