@@ -1,27 +1,10 @@
-FROM jupyter/scipy-notebook:latest
+ARG BASE_IMAGE=base_jupyter:latest
+FROM ${BASE_IMAGE}
 
-WORKDIR /usr/src/app
+USER ${NB_UID}
 
-USER root
+# Just install the minimal requirements - everything else comes from base
+COPY environments/minimal/requirements.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-RUN apt-get update && apt-get install -y libgl1 && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Copy settings files
-COPY files/themes.jupyterlab-settings /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/apputils-extension/
-COPY files/tracker.jupyterlab-settings /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/
-
-# Change ownership of the copied files to jovyan
-RUN chown -R $NB_UID /home/jovyan/.jupyter
-RUN chmod -R 777 /home/jovyan/.jupyter
-
-# Switch back to the Jupyter user
-USER $NB_UID
-
-# Install Python dependencies
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --upgrade nbconvert
-
-EXPOSE 8888
-
-CMD ["jupyter", "notebook", "--ip='0.0.0.0'", "--port=8888", "--no-browser", "--allow-root"]
+# The CMD is inherited from the base image
