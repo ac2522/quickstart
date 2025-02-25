@@ -6,10 +6,6 @@ USER root
 
 RUN apt-get update && apt-get install -y libgl1 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Create necessary directories for Jupyter settings
-RUN mkdir -p /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/apputils-extension/ \
-    && mkdir -p /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/
-
 # Copy settings files
 COPY files/themes.jupyterlab-settings /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/apputils-extension/
 COPY files/tracker.jupyterlab-settings /home/jovyan/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/
